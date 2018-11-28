@@ -27,7 +27,7 @@ phases:
       - ./packer build -color=false packer_cis_rhel.json | tee build_rhel.log
       
       # build RHEL and capture logs in build_win2016_rhel.log for status
-      - ./packer build -color=false packer_cis_win2016.json | tee build_win2016.log 
+      #- ./packer build -color=false packer_cis_win2016.json | tee build_win2016.log 
   post_build:
     commands:
       # extract status from log - Packer doesn't return non-zero status; we must do that if Packer build failed
@@ -54,11 +54,11 @@ phases:
       - echo "RHEL build completed on `date`"
     
       ## Windows2016
-      - egrep "${AWS_REGION}\:\sami\-" build_win2016.log | cut -d' ' -f2 > ami_id_win2016.txt
-      - test -s ami_id_win2016.txt || exit 1
-      - sed -i.bak "s/<<AMI-ID>>/$(cat ami_id_win2016.txt)/g" ami_builder_event.json
-      - aws events put-events --entries file://ami_builder_event.json
-      - echo "Windows 2016 build completed on `date`"
+      #- egrep "${AWS_REGION}\:\sami\-" build_win2016.log | cut -d' ' -f2 > ami_id_win2016.txt
+      #- test -s ami_id_win2016.txt || exit 1
+      #- sed -i.bak "s/<<AMI-ID>>/$(cat ami_id_win2016.txt)/g" ami_builder_event.json
+      #- aws events put-events --entries file://ami_builder_event.json
+      #- echo "Windows 2016 build completed on `date`"
 artifacts:
   files:
     - ami_builder_event.json
