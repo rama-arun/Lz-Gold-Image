@@ -3,23 +3,67 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      # Install Packer, if not present
       - echo "Installing Packer"
       - curl -o packer.zip https://releases.hashicorp.com/packer/1.2.2/packer_1.2.2_linux_amd64.zip && unzip packer.zip
-      - echo "Validating Packer template"
-      - ./packer validate packer_cis.json
+      - echo "Validating Packer template for Amazon Linux 1"
+      - ./packer validate packer_cis_amznlinux.json
+      - echo "Validating Packer template for Ubuntu"
+      - ./packer validate packer_cis_ubuntu.json
+      - echo "Validating Packer template for RHEL"
+      - ./packer validate packer_cis_rhel.json
+      - echo "Validating Packer template for Windows2016"
+      - ./packer validate packer_cis_win2016.json
   build:
     commands:
-      - ./packer build -color=false packer_cis.json | tee build.log
+      
+      # build Amazon Linux and capture logs in build_amzlinux.log for status
+      - ./packer build -color=false packer_cis_amznlinux.json | tee build_amzlinux.log
+      
+      # build Ubuntu and capture logs in build_ubuntu.log for status
+      - ./packer build -color=false packer_cis_ubuntu.json | tee build_ubuntu.log
+      
+      # build RHEL and capture logs in build_cis_rhel.log for status
+      - ./packer build -color=false packer_cis_rhel.json | tee build_rhel.log
+      
+      # build RHEL and capture logs in build_win2016_rhel.log for status
+      - ./packer build -color=false packer_cis_win2016.json | tee build_win2016.log 
   post_build:
     commands:
-      - egrep "${AWS_REGION}\:\sami\-" build.log | cut -d' ' -f2 > ami_id.txt
-      # Packer doesn't return non-zero status; we must do that if Packer build failed
-      - test -s ami_id.txt || exit 1
-      - sed -i.bak "s/<<AMI-ID>>/$(cat ami_id.txt)/g" ami_builder_event.json
+      # extract status from log - Packer doesn't return non-zero status; we must do that if Packer build failed
+      
+      ## Amzon Linux
+      - egrep "${AWS_REGION}\:\sami\-" build_amzlinux.log | cut -d' ' -f2 > ami_id_amzlinux.txt
+      - test -s ami_id_amzlinux.txt || exit 1
+      - sed -i.bak "s/<<AMI-ID>>/$(cat ami_id_amzlinux.txt)/g" ami_builder_event.json
       - aws events put-events --entries file://ami_builder_event.json
-      - echo "build completed on `date`"
+      - echo "Amazon Linux build completed on `date`"
+      
+      ## Ubuntu
+      - egrep "${AWS_REGION}\:\sami\-" build_ubuntu.log | cut -d' ' -f2 > ami_id_ubuntu.txt
+      - test -s ami_id_ubuntu.txt || exit 1
+      - sed -i.bak "s/<<AMI-ID>>/$(cat ami_id_ubuntu.txt)/g" ami_builder_event.json
+      - aws events put-events --entries file://ami_builder_event.json
+      - echo "Ubuntu build completed on `date`"
+      
+      ## RHEL
+      - egrep "${AWS_REGION}\:\sami\-" build_rhel.log | cut -d' ' -f2 > ami_id_rhel.txt
+      - test -s ami_id_rhel.txt || exit 1
+      - sed -i.bak "s/<<AMI-ID>>/$(cat ami_id_rhel.txt)/g" ami_builder_event.json
+      - aws events put-events --entries file://ami_builder_event.json
+      - echo "RHEL build completed on `date`"
+    
+      ## Windows2016
+      - egrep "${AWS_REGION}\:\sami\-" build_win2016.log | cut -d' ' -f2 > ami_id_win2016.txt
+      - test -s ami_id_win2016.txt || exit 1
+      - sed -i.bak "s/<<AMI-ID>>/$(cat ami_id_win2016.txt)/g" ami_builder_event.json
+      - aws events put-events --entries file://ami_builder_event.json
+      - echo "Windows 2016 build completed on `date`"
 artifacts:
   files:
     - ami_builder_event.json
-    - build.log
+    - build_amzlinux.log
+    - build_ubuntu.log
+    - build_rhel.log
+    - build_win2016.log
   discard-paths: yes

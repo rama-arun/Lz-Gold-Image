@@ -1,0 +1,18 @@
+---
+
+# Ensure all packages have been patched
+- name: upgrade all packages
+  yum:
+    name: "*"
+    state: latest
+- name: install clamav protection from yum
+  yum:
+    name:
+      - clamav-server 
+      - clamav-data 
+      - clamav-update 
+      - clamav-filesystem 
+      - clamav 
+      - clamav-devel 
+      - clamav-lib 
+    state: present

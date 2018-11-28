@@ -1,0 +1,7 @@
+---
+
+# Ensure all packages have been patched
+- name: install clamav protection from apt-get
+  become: true
+  apt:
+    name: clamav

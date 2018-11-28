@@ -1,0 +1,7 @@
+---
+
+# Ensure all packages have been patched
+- name: Install IIS (Web-Server only)
+  win_feature:
+    name: Web-Server
+    state: present
